@@ -1,0 +1,54 @@
+spring:
+  cloud:
+    # Nacos 服务发现与注册配置
+    nacos:
+      discovery:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+      config:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+  config:
+    import:
+      - optional:nacos:flash-im-dispatch.yaml
+
+  data:
+    # Redis配置
+    redis:
+      host: 192.168.100.130
+      port: 6379
+      password: redis1234!
+
+
+# rocketMQ配置
+rocketmq:
+  name-server: 192.168.100.130:9876  # NameServer 地址，集群使用';'隔开
+  producer:
+    group: chat-dispatch-producer-group  # 生产者组名称
+    send-message-timeout: 30000
+    retry-times-when-send-failed: 3
+    retry-next-server: true
+  consumers:
+    message-group: dispatch-message-consumer-group  # 消费者组名称
+    notify-group: dispatch-notify-consumer-group  # 消费者组名称
+
+## netty配置
+flashim:
+  dispatch:
+    netty:
+      server:
+        bindAddress: 0.0.0.0 #  绑定地址
+        listenPort: 30520 # 监听端口
+        serverBossThreads: 1 # boss线程池数量
+        serverWorkerThreads: 3 # selector线程池数量
+        serverHandlerExecutorEnable: true # 是否启用独立线程池执行channelHandler，不启用则默认evenLoop执行
+        serverHandlerThreads: 8 # channelHandler处理器的工作线程池数量
+        serverPooledByteBufAllocatorEnable: true # 是否使用池化ByteBufAllocator
+        serverChannelMaxIdleTimeSeconds: 120 # channel最大（读写）空闲时间，单位：秒，超过该时间会触发相应idle事件
+        serverAsyncSemaphoreValue: 64 # 异步远程访问的信号量（流量访问限制）
+        serverCallbackExecutorThreads: 5 # 异步远程访问的回调方法的线程池数量
+        serverSocketBacklog: 1024 # 服务端socket连接队列大小
+        shutdownWaitTimeSeconds: 3 # 优雅关闭等待时间
+        useSSL: false # 是否使用安全传输ssl
+        tlsServerCertPath: "" # 服务端证书路径
+        tlsServerKeyPath: "" # 服务端私钥路径

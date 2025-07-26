@@ -1,0 +1,64 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth
+          uri: lb://flash-im-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+
+        - id: single-chat
+          uri: lb://flash-im-single-chat
+          predicates:
+            - Path=/api/single-chat/**
+          filters:
+            - StripPrefix=1
+            - JwtAuthentication
+
+        - id: user-public
+          uri: lb://flash-im-user
+          predicates:
+            - Path=/api/user/queryAllUser
+          filters:
+            - StripPrefix=1
+          order: 0
+
+        - id: user
+          uri: lb://flash-im-user
+          predicates:
+            - Path=/api/user/**,/api/friend/**
+          filters:
+            - StripPrefix=1
+            - JwtAuthentication
+          order: 1
+
+        - id: offline
+          uri: lb://flash-im-offline
+          predicates:
+            - Path=/api/offline/**
+          filters:
+            - StripPrefix=1
+            - JwtAuthentication
+
+
+    # Nacos 服务发现与注册配置
+    nacos:
+      discovery:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+      config:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+  config:
+    import:
+      - optional:nacos:flash-im-gateway-http.yaml
+
+
+flashim:
+  jwt:
+    enabled: true
+    auth-center-url: http://localhost:10821
+    key-fetch-timeout: 10s
+    key-fetch-max-retries: 5

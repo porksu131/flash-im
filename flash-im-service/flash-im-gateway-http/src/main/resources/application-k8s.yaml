@@ -1,0 +1,68 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: auth
+          uri: lb://flash-im-auth
+          predicates:
+            - Path=/api/auth/**
+          filters:
+            - StripPrefix=1
+
+        - id: single-chat
+          uri: lb://flash-im-single-chat
+          predicates:
+            - Path=/api/single-chat/**
+          filters:
+            - StripPrefix=1
+            - JwtAuthentication
+
+        - id: user-public
+          uri: lb://flash-im-user
+          predicates:
+            - Path=/api/user/queryAllUser
+          filters:
+            - StripPrefix=1
+          order: 0
+
+        - id: user
+          uri: lb://flash-im-user
+          predicates:
+            - Path=/api/user/**,/api/friend/**
+          filters:
+            - StripPrefix=1
+            - JwtAuthentication
+          order: 1
+
+        - id: offline
+          uri: lb://flash-im-offline
+          predicates:
+            - Path=/api/offline/**
+          filters:
+            - StripPrefix=1
+            - JwtAuthentication
+
+
+    # Nacos 服务发现与注册配置
+    nacos:
+      discovery:
+        server-addr: nacos-0.nacos-headless.nacos.svc.cluster.local:28848,nacos-1.nacos-headless.nacos.svc.cluster.local:28848 # nacos集群使用','隔开
+        username: 'nacos'
+        password: 'nacos'
+        namespace: ${spring.profiles.active}
+      config:
+        server-addr: nacos-0.nacos-headless.nacos.svc.cluster.local:28848,nacos-1.nacos-headless.nacos.svc.cluster.local:28848 # nacos集群使用','隔开
+        username: 'nacos'
+        password: 'nacos'
+        namespace: ${spring.profiles.active}
+  config:
+    import:
+      - optional:nacos:flash-im-gateway-http.yaml
+
+
+flashim:
+  jwt:
+    enabled: true
+    auth-center-url: http://flash-im-auth:8080
+    key-fetch-timeout: 10s
+    key-fetch-max-retries: 5

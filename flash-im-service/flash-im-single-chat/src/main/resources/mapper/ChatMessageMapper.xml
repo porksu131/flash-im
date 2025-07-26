@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.szr.flashim.singlechat.mapper.ChatMessageMapper">
+    <insert id="insert">
+        INSERT INTO flashim_chat_message (
+        message_id,
+        message_content,
+        message_to,
+        message_to_name,
+        message_from,
+        message_from_name,
+        message_type,
+        session_id,
+        sequence_id,
+        client_msg_id,
+        client_seq,
+        client_send_time,
+        create_time,
+        update_time,
+        read_time,
+        status
+        ) VALUES (
+        #{messageId},
+        #{messageContent},
+        #{messageTo},
+        #{messageToName},
+        #{messageFrom},
+        #{messageFromName},
+        #{messageType},
+        #{sessionId},
+        #{sequenceId},
+        #{clientMsgId},
+        #{clientSeq},
+        #{clientSendTime},
+        #{createTime},
+        #{updateTime},
+        #{readTime},
+        #{status}
+        )
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE flashim_chat_message
+        SET status = #{status}
+        WHERE message_id = #{messageId}
+    </update>
+
+    <select id="selectById" resultType="com.szr.flashim.singlechat.pojo.ChatMessage">
+        SELECT * FROM flashim_chat_message
+        WHERE message_id = #{messageId}
+    </select>
+
+    <select id="selectUnreadMessages" resultType="com.szr.flashim.singlechat.pojo.ChatMessage">
+        SELECT * FROM flashim_chat_message
+        WHERE message_to = #{messageTo}
+        AND message_from = #{messageFrom}
+        AND status in ('1','2')
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countUnreadMessages" resultType="int">
+        SELECT COUNT(*) FROM flashim_chat_message
+        WHERE message_to = #{messageTo}
+        AND message_from = #{messageFrom}
+        AND status in ('1','2')
+    </select>
+
+    <!-- 创建临时表方式批量更新 -->
+    <update id="batchUpdateStatusWithTempTable">
+        <!-- 创建临时表 -->
+        DROP TABLE IF EXISTS temp_message_ids;
+        CREATE TEMPORARY TABLE temp_message_ids (message_id bigint PRIMARY KEY);
+
+        <!-- 批量插入ID -->
+        INSERT INTO temp_message_ids (message_id) VALUES
+        <foreach item="id" collection="ids" separator=",">
+            (#{id})
+        </foreach>;
+
+        <!-- 执行更新 -->
+        UPDATE flashim_chat_message m
+        JOIN temp_message_ids t ON m.message_id = t.message_id
+        SET m.status = #{status}, m.read_time = #{readTime}
+        WHERE m.message_to = #{messageTo};
+
+        <!-- 删除临时表 -->
+        DROP TEMPORARY TABLE temp_message_ids;
+    </update>
+
+    <!-- 批量更新 -->
+    <update id="batchUpdateStatus">
+        UPDATE flashim_chat_message
+        SET status = #{status}, read_time = #{readTime}
+        WHERE message_id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND message_to = #{messageTo};
+    </update>
+</mapper>

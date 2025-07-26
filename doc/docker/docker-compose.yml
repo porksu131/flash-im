@@ -1,0 +1,112 @@
+version: '3.8'
+services:
+  mysql:
+    image: mysql:8.0.41
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"  # 添加MySQL端口映射
+    environment:
+      MYSQL_DATABASE: flash_im
+      MYSQL_USER: flash_im
+      MYSQL_PASSWORD: mysql1234!
+      MYSQL_ROOT_PASSWORD: mysql1234!
+    volumes:
+      - /usr/docker/data/mysql/conf:/etc/mysql/conf.d
+      - /usr/docker/data/mysql/data:/var/lib/mysql
+      - /usr/docker/data/mysql/logs:/var/log/mysql
+    networks:
+      - app-net
+    command: --default-authentication-plugin=mysql_native_password
+
+  nacos:
+    image: nacos/nacos-server:v2.4.3
+    container_name: nacos
+    restart: always
+    ports:
+      - "8848:8848"  # Nacos控制台端口
+      - "9848:9848"  # gRPC通信端口
+      - "9849:9849"  # gRPC通信端口
+    environment:
+      MODE: standalone
+      SPRING_DATASOURCE_PLATFORM: mysql
+      MYSQL_SERVICE_HOST: mysql
+      MYSQL_SERVICE_DB_NAME: flash_im
+      MYSQL_SERVICE_USER: flash_im
+      MYSQL_SERVICE_PASSWORD: mysql1234!
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+    volumes:
+      - /usr/docker/data/nacos/conf:/home/nacos/conf
+      - /usr/docker/data/nacos/data:/home/nacos/data
+      - /usr/docker/data/nacos/logs:/home/nacos/logs
+    networks:
+      - app-net
+    depends_on:
+      - mysql
+
+  redis:
+    image: redis:7.0.12
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"  # Redis端口映射
+    command: redis-server --requirepass redis1234!
+    volumes:
+      - /usr/docker/data/redis/conf:/usr/local/etc/redis
+      - /usr/docker/data/redis/data:/data
+      - /usr/docker/data/redis/logs:/logs
+    networks:
+      - app-net
+
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.2.0
+    container_name: rocketmq-namesrv
+    restart: always
+    ports:
+      - "9876:9876"  # NameServer服务端口
+    command: sh mqnamesrv -c /opt/rocketmq/conf/namesrv.properties
+    environment:
+      JAVA_OPT_EXT: -Xms512m -Xmx512m
+    volumes:
+      - /usr/docker/data/rocketmq/namesrv/conf:/opt/rocketmq/conf
+      - /usr/docker/data/rocketmq/namesrv/logs:/root/logs
+      - /usr/docker/data/rocketmq/namesrv/store:/root/store
+    networks:
+      - app-net
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.2.0
+    container_name: rocketmq-broker
+    restart: always
+    ports:
+      - "10911:10911"  # Broker主端口
+      - "10909:10909"  # FastRemoting端口
+    command: sh mqbroker -c /opt/rocketmq/conf/broker.conf
+    environment:
+      JAVA_OPT_EXT: -Xms1g -Xmx1g
+    volumes:
+      - /usr/docker/data/rocketmq/broker/conf:/opt/rocketmq/conf
+      - /usr/docker/data/rocketmq/broker/logs:/root/logs
+      - /usr/docker/data/rocketmq/broker/store:/root/store
+    networks:
+      - app-net
+    depends_on:
+      - rocketmq-namesrv
+
+  rocketmq-dashboard:
+    image: apacherocketmq/rocketmq-dashboard:2.0.1
+    container_name: rocketmq-dashboard
+    restart: always
+    ports:
+      - "8080:8080"  # Dashboard控制台端口
+    environment:
+      JAVA_OPTS: -Xms512M -Xmx512M
+    networks:
+      - app-net
+    depends_on:
+      - rocketmq-namesrv
+
+networks:
+  app-net:
+    driver: bridge

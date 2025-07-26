@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: nacos
+  namespace: nacos
+spec:
+  serviceName: nacos-headless
+  replicas: 2  # 至少3节点保证高可用
+  selector:
+    matchLabels:
+      app: nacos
+  template:
+    metadata:
+      labels:
+        app: nacos
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values: [nacos]
+              topologyKey: kubernetes.io/hostname
+            - labelSelector:
+                matchExpressions:
+                  - key: node-role.kubernetes.io/master
+                    operator: DoesNotExist
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+      - name: nacos
+        image: nacos/nacos-server:v2.4.3
+        ports:
+        - containerPort: 28848
+          name: server
+        - containerPort: 27848
+          name: raft
+        env:
+        - name: MODE
+          value: cluster
+        - name: PREFER_HOST_MODE
+          value: hostname
+        - name: NACOS_SERVERS
+          value: "nacos-0.nacos-headless:28848 nacos-1.nacos-headless:28848"
+        volumeMounts:
+        - name: nacos-config
+          mountPath: /home/nacos/conf/application.properties
+          subPath: application.properties
+        - name: nacos-data
+          mountPath: /home/nacos/data
+      volumes:
+      - name: nacos-config
+        configMap:
+          name: nacos-config
+  volumeClaimTemplates:
+  - metadata:
+      name: nacos-data
+    spec:
+      accessModes: [ "ReadWriteMany" ]
+      storageClassName: "nfs-storage"  # 根据实际存储类填写
+      resources:
+        requests:
+          storage: 5Gi

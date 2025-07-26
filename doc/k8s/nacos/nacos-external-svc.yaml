@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: nacos-service
+  namespace: nacos
+spec:
+  type: NodePort
+  ports:
+  - port: 28848         # Service 的 ClusterIP 端口（集群内访问）
+    targetPort: 28848    # 必须与 Nacos 容器实际监听的端口一致
+    nodePort: 30048      # 节点端口（范围 30000-32767）
+  selector:
+    app: nacos

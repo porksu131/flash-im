@@ -1,0 +1,9 @@
+server:
+  port: 10721
+spring:
+  profiles:
+    active: dev
+  application:
+    name: flash-im-user
+
+

@@ -1,0 +1,46 @@
+spring:
+  cloud:
+    # Nacos 服务发现与注册配置
+    nacos:
+      discovery:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+      config:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+  config:
+    import:
+      - optional:nacos:flash-im-single-chat.yaml
+
+  # mysql连接配置
+  datasource:
+    url: jdbc:mysql://192.168.100.130:3306/flash_im?useLegacyDatetimeCode=false&timeZone=Asia/Shanghai&rewriteBatchedStatements=true&allowMultiQueries=true&characterEncoding=utf8&connectTimeout=3000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: flash_im
+    password: mysql1234!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    # Redis配置
+    redis:
+      host: 192.168.100.130
+      port: 6379
+      password: redis1234!
+
+# mybatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 开启SQL日志
+
+# rocketMQ配置
+rocketmq:
+  name-server: 192.168.100.130:9876  # NameServer 地址，集群使用';'隔开
+  producer:
+    group: single-chat-producer-group  # 生产者组名称
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 3
+    retry-next-server: true
+  consumer:
+    group: single-chat-consumer-group  # 消费者组名称
+    topic: single-chat-topic  # 订阅的主题

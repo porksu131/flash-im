@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.szr.flashim.offline.mapper.ChatMessageMapper">
+    <insert id="insert" parameterType="com.szr.flashim.offline.pojo.ChatMessagePojo">
+        INSERT INTO flashim_chat_message (
+        message_id,
+        message_content,
+        message_to,
+        message_to_name,
+        message_from,
+        message_from_name,
+        message_type,
+        create_time,
+        update_time,
+        save_time,
+        status
+        ) VALUES (
+        #{messageId},
+        #{messageContent},
+        #{messageTo},
+        #{messageToName},
+        #{messageFrom},
+        #{messageFromName},
+        #{messageType},
+        #{createTime},
+        #{updateTime},
+        #{saveTime},
+        #{status}
+        )
+    </insert>
+
+    <update id="updateStatus">
+        UPDATE flashim_chat_message
+        SET status = #{status}
+        WHERE message_id = #{messageId}
+    </update>
+
+    <select id="selectById" resultType="com.szr.flashim.offline.pojo.ChatMessagePojo">
+        SELECT * FROM flashim_chat_message
+        WHERE message_id = #{messageId}
+    </select>
+
+    <select id="selectUnreadMessages" resultType="com.szr.flashim.offline.pojo.ChatMessagePojo">
+        SELECT * FROM flashim_chat_message
+        WHERE message_to = #{messageTo}
+        AND message_from = #{messageFrom}
+        AND status = '1'
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countUnreadMessages" resultType="int">
+        SELECT COUNT(*) FROM flashim_chat_message
+        WHERE message_to = #{messageTo}
+        AND message_from = #{messageFrom}
+        AND status = '1'
+    </select>
+
+    <select id="batchSelectMessages" resultType="com.szr.flashim.offline.pojo.ChatMessagePojo">
+        SELECT *
+        FROM flashim_chat_message
+        WHERE message_id IN
+        <foreach item="id" collection="ids" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        ORDER BY create_time ASC
+    </select>
+</mapper>

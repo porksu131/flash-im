@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.szr.flashim.general.model.protoc";
+
+message ChatMessage {
+  int64 messageFrom = 1;
+  int64 messageTo = 2;
+  int32 encryptType = 3;
+  int32 messageType = 4;
+  int32 sourceType = 5;
+  int64 clientSendTime = 6;
+  int64 messageId = 7;
+  bytes messageContent = 8;
+  string messageFromName = 9;
+  string messageToName = 10;
+  int32 status = 11;
+  int64 clientMsgId = 12;
+  int64 clientSeq = 13;
+  int64 sequenceId = 14;
+  string sessionId = 15;
+}
+
+message BatchMessage {
+  int64 messageTo = 1;
+  repeated ChatMessage chatMessages = 2;
+}
+
+message BatchMessageIds {
+  int64 messageTo = 1;
+  repeated int64 chatMessageIds = 2;
+}
+
+message HeartBeat {
+  int64 uid = 1;
+}
+
+message AuthMessage {
+  int64 uid = 1;
+  string token = 2;
+  int64 createTime = 3;
+}
+
+message AuthNotify{
+  int64 uid = 1;
+  int64 operationTime = 2;
+  int32 operationType = 3;
+}
+
+message BatchFriendNotify {
+  int64 uid = 1;
+  int64 operationTime = 2;
+  int32 operationType = 3;
+  repeated int64 friendIds = 4;
+}
+
+message FriendNotify {
+  int64 uid = 1;
+  int64 operationTime = 2;
+  int32 operationType = 3;
+  int64 friendId = 4;
+}
+
+message CommonResponse {
+  int32 code = 1;
+  string msg = 2;
+  bytes data = 3;
+}
+
+

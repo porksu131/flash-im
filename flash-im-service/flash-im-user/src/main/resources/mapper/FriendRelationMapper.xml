@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szr.flashim.user.mapper.FriendRelationMapper">
+    <select id="findFriendsByUid" resultType="com.szr.flashim.user.pojo.FriendRelation">
+        SELECT *
+        FROM flashim_friend_relation
+        WHERE uid = #{uid}
+    </select>
+    <select id="checkFriendExists" resultType="int">
+        SELECT COUNT(*) FROM flashim_friend_relation
+        WHERE uid = #{uid} AND friend_id = #{friendId}
+    </select>
+
+    <insert id="save" parameterType="com.szr.flashim.user.pojo.FriendRelation">
+        INSERT INTO flashim_friend_relation
+            (id, uid, friend_id, user_name, friend_name)
+        VALUES
+            (#{id}, #{uid}, #{friendId}, #{userName}, #{friendName})
+    </insert>
+
+    <select id="findByUidAndFriendIds" resultType="com.szr.flashim.user.pojo.FriendRelation">
+        SELECT * FROM flashim_friend_relation WHERE uid = #{userId} AND friend_id IN
+        <foreach item='id' collection='friendIds' open='(' separator=',' close=')'>
+            #{id}",
+        </foreach>"
+    </select>
+
+</mapper>

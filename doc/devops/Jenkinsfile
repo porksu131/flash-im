@@ -1,0 +1,235 @@
+pipeline {
+    agent any
+    
+    environment {
+        HARBOR_REGISTRY = '192.168.100.170:8080'
+        HARBOR_NAMESPACE = 'docker-repo'
+        K8S_MASTER_IP = '192.168.100.11'
+        K8S_MASTER_USER = 'root'
+        K8S_SSH = "${K8S_MASTER_USER}@${K8S_MASTER_IP}"
+        IMAGE_VERSION = "${TAG}-${BUILD_NUMBER}"
+    }
+
+    // auth要单独勾选先部署后，再部署其他的。通常auth，gateway-http较为稳定，一般不变，不用重复部署，所以默认不勾选。
+    parameters {
+        extendedChoice(
+            name: 'SELECTED_SERVICES',
+            type: 'PT_CHECKBOX',
+            defaultValue: 'flash-im-gateway-tcp,flash-im-dispatch,flash-im-single-chat,flash-im-offline,flash-im-user', // 默认auth,gateway-http不选
+            description: '选择要构建的微服务',
+            multiSelectDelimiter: ',',
+            quoteValue: false,
+            saveJSONParameterToFile: false,
+            visibleItemCount: 7,
+            value: 'flash-im-auth,flash-im-gateway-http,flash-im-gateway-tcp,flash-im-dispatch,flash-im-single-chat,flash-im-offline,flash-im-user' // 可选项列表
+        )
+    }
+
+
+    stages {
+        stage('初始化') {
+            steps {
+                script {
+                    // 检查是否有服务被选中
+                    if (params.SELECTED_SERVICES == null || params.SELECTED_SERVICES.trim().isEmpty()) {
+                        error("未选择任何微服务，构建终止")
+                    }
+
+                    // 打印选中的服务
+                    echo "已选中的微服务: ${params.SELECTED_SERVICES}"
+                }
+            }
+        }
+        stage('拉取git仓库代码') {
+            steps {
+                checkout scmGit(branches: [[name: '${tag}']], extensions: [], userRemoteConfigs: [[credentialsId: '543ae864-38be-4f0f-b4ba-68a3a5ae2ed0', url: 'http://192.168.100.150/szr-group/flash-im.git']])
+                echo '拉取git仓库代码-SUCCESS'
+            }
+        }
+        stage('代码质量扫描') {
+            steps {
+                echo '代码质量扫描-SUCCESS'
+            }
+        }
+        stage('通过maven构建项目') {
+            steps {
+                sh '/var/jenkins_home/maven/bin/mvn clean package -DskipTests'
+                echo '通过maven构建项目-SUCCESS'
+            }
+        }
+
+        stage('制作docker镜像') {
+            steps {
+                script {
+                    // 将字符串参数转换为列表
+                    def services = params.SELECTED_SERVICES.split(',') as List
+
+                    // 动态生成并行任务
+                    def parallelStages = [:]
+
+                     // 动态生成每个服务的构建阶段
+                    services.each { service ->
+                        parallelStages[service] = {
+                            stage("${service}") {
+                                script {
+                                    if (service == "flash-im-gateway-tcp") {
+                                        buildDockerImage(service, "${IMAGE_VERSION}","./flash-im-netty/${service}/", "--build-arg CONTAINER_RPORT=30420")
+                                    } else if(service == "flash-im-dispatch") {
+                                        buildDockerImage(service, "${IMAGE_VERSION}","./flash-im-netty/${service}/", "--build-arg CONTAINER_RPORT=30520")
+                                    } else {
+                                        buildDockerImage(service, "${IMAGE_VERSION}", "./flash-im-service/${service}/", "")
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
+                    // 执行并行构建
+                    parallel parallelStages
+                }
+            }
+        }
+        stage('推送docker镜像') {
+            steps {
+                script {
+                    // 将字符串参数转换为列表
+                    def services = params.SELECTED_SERVICES.split(',') as List
+
+                    // 动态生成并行任务
+                    def parallelStages = [:]
+
+                    // 动态生成每个服务的推送阶段
+                    services.each { service ->
+                        parallelStages[service] = {
+                            stage("${service}") {
+                                script {
+                                    pushDockerImage(service, "${IMAGE_VERSION}", "${HARBOR_REGISTRY}", "${HARBOR_NAMESPACE}")
+                                }
+                            }
+                        }
+                    }
+
+                    // 执行并行推送
+                    parallel parallelStages
+                }
+            }
+        }
+        stage('部署到k8s集群') {
+            steps {
+                script {
+                    // 将字符串参数转换为列表
+                    def services = params.SELECTED_SERVICES.split(',') as List
+
+                    // 动态生成并行任务
+                    def parallelStages = [:]
+
+                     // 动态生成每个服务的部署阶段
+                    services.each { service ->
+                        parallelStages[service] = {
+                            stage("${service}") {
+                                script {
+                                    if (service == "flash-im-gateway-tcp") {
+                                        deployToKubernetes(service, "${IMAGE_VERSION}" , "1", "30420", "${K8S_SSH}", "${HARBOR_REGISTRY}", "${HARBOR_NAMESPACE}")
+                                    } else if(service == "flash-im-dispatch") {
+                                        deployToKubernetes(service, "${IMAGE_VERSION}" , "1", "30520", "${K8S_SSH}", "${HARBOR_REGISTRY}", "${HARBOR_NAMESPACE}")
+                                    } else {
+                                        deployToKubernetes(service, "${IMAGE_VERSION}" , "1", "8080", "${K8S_SSH}", "${HARBOR_REGISTRY}", "${HARBOR_NAMESPACE}")
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+
+                    // 执行并行部署
+                    parallel parallelStages
+                }
+            }
+        }
+    }
+}
+
+// 只有网关才需要ingress-nginx来暴露域名访问，集群内的其他组件或服务，如无必要，不需要暴露
+def isRemoveIngress(appName) {
+    def result = true
+    if(appName == "flash-im-gateway-http" || appName == "flash-im-gateway-tcp") {
+        result = false
+    }
+    return result
+}
+
+def buildDockerImage(appName, version, workspacePath, buildArgs) {
+    def imageName = "${appName}:${version}"
+    def dockerFilePath = "doc/devops/Dockerfile"
+    echo "正在删除[${imageName}]多余的镜像副本......" // 可选。需谨慎
+    sh """
+            #!/bin/bash
+            IMAGES=\$(docker images | grep "${appName}" | awk '{print \$1":"\$2}')
+            if [ ! -z "\$IMAGES" ]; then
+                for IMAGE in \$IMAGES; do
+                    echo "Deleting image: \$IMAGE"
+                    docker rmi -f \$IMAGE
+                done
+            else
+                echo "No images to delete."
+            fi
+    """
+    echo "正在制作[${imageName}]镜像......"
+    sh "docker build -t ${imageName} ${buildArgs} -f ${dockerFilePath} ${workspacePath}"
+    echo "[${imageName}]镜像制作-SUCCESS"
+}
+
+def pushDockerImage(appName, version, harborRegistry, harborNamespace) {
+    def imageName = "${appName}:${version}"
+    echo "正在推送[${imageName}]镜像......"
+    withCredentials([usernamePassword(credentialsId: 'Harbor-Credential', passwordVariable: 'Harbor_Password', usernameVariable: 'Harbor_User')]) {
+        sh "echo ${Harbor_Password} | docker login ${harborRegistry} -u ${Harbor_User} --password-stdin"
+        sh "docker tag ${imageName} ${harborRegistry}/${harborNamespace}/${imageName}"
+        sh "docker push ${harborRegistry}/${harborNamespace}/${imageName}"
+        echo "推送[${imageName}]镜像-SUCCESS"
+    }
+}
+
+
+def deployToKubernetes(appName, version, replicas, containerPort, k8sSSH, harborRegistry, harborNamespace) {
+    def remoteImageName = "${harborRegistry}/${harborNamespace}/${appName}:${version}"
+    def templateFile = "doc/devops/deploy.tpl"
+    def outputDir = "deploy/${appName}"
+    def outputFile = "${outputDir}/deploy-${version}.yaml"
+    def isRemoveIngress = isRemoveIngress(appName)
+
+
+    echo "正在生成[${appName}]部署文件......"
+    sh """
+        mkdir -p ${outputDir}
+        cp -f ${templateFile} ${outputDir}
+        mv ${outputDir}/deploy.tpl ${outputFile}
+
+        sed -i 's/\${container_port}/${containerPort}/g' ${outputFile}
+        sed -i 's/\${service_port}/${containerPort}/g' ${outputFile}
+        sed -i 's#\${image_name}#${remoteImageName}#g' ${outputFile}
+        sed -i 's/\${replicas}/${replicas}/g' ${outputFile}
+        sed -i 's/\${app_name}/${appName}/g' ${outputFile}
+    """
+
+    // 移除ingress-nginx部署声明
+    if(isRemoveIngress) {
+        sh "sed -i '/###INGRESS_START###/,/###INGRESS_END###/d' ${outputFile}"
+    }
+    echo "生成[${appName}]部署文件-SUCCESS"
+
+
+    echo "正在上传[${appName}]部署文件到k8s-master节点......"
+    def remoteDir = "/data/jenkins"
+
+    // 在jenkins中配置了远程目录/data/jenkins，所以上传后，在k8s-masters上：/data/jenkins/deploy/${outputFile}
+    sshPublisher(publishers: [sshPublisherDesc(configName: 'k8s-master', transfers: [sshTransfer(cleanRemote: false, excludes: '', execCommand: '', execTimeout: 120000, flatten: false, makeEmptyDirs: false, noDefaultExcludes: false, patternSeparator: '[, ]+',
+    remoteDirectory: '', remoteDirectorySDF: false, removePrefix: '', sourceFiles: "${outputFile}")], usePromotionTimestamp: false, useWorkspaceInPromotion: false, verbose: false)])
+    echo "上传[${appName}]部署文件到k8s-master节点-SUCCESS"
+
+
+    echo "[${appName}]正在部署......"
+    sh "ssh ${k8sSSH} kubectl apply -f ${remoteDir}/${outputFile}"
+    echo "[${appName}]部署-SUCCESS"
+}

@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nacos-pv-1
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-storage
+  nfs:
+    path: /nfs_share/k8s/nacos/pv1
+    server: 192.168.100.11
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nacos-pv-2
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-storage
+  nfs:
+    path: /nfs_share/k8s/nacos/pv2
+    server: 192.168.100.11
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nacos-pv-3
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: nfs-storage
+  nfs:
+    path: /nfs_share/k8s/nacos/pv2
+    server: 192.168.100.11

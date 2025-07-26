@@ -1,0 +1,46 @@
+spring:
+  cloud:
+    # Nacos 服务发现与注册配置
+    nacos:
+      discovery:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+      config:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+  config:
+    import:
+      - optional:nacos:flash-im-auth.yaml
+
+  # mysql连接配置
+  datasource:
+    url: jdbc:mysql://192.168.100.130:3306/flash_im?allowMultiQueries=true&characterEncoding=utf8&connectTimeout=3000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: flash_im
+    password: mysql1234!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+
+  data:
+    # Redis配置
+    redis:
+      host: 192.168.100.130
+      port: 6379
+      password: redis1234!
+
+
+# mybatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 开启SQL日志
+
+
+flashim:
+  jwt:
+    enabled: true
+    privateKeyPath: classpath:rsa/jwt_private.pem
+    publicKeyPath: classpath:rsa/jwt_public.pem
+    accessTokenExpiration: 1800000    # 30分钟
+    refreshTokenExpiration: 2592000000 # 30天
+    refreshThreshold: 300000      # 5分钟

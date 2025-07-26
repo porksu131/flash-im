@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szr.flashim.user.mapper.UserMapper">
+    <select id="getByUserName" resultType="com.szr.flashim.user.pojo.User">
+        SELECT *
+        FROM flashim_user
+        WHERE user_name = #{userName}
+    </select>
+    <select id="getByUid" resultType="com.szr.flashim.user.pojo.User">
+        SELECT * FROM flashim_user WHERE uid = #{uid}
+    </select>
+
+    <select id="queryAllUsers" resultType="com.szr.flashim.user.pojo.User">
+        SELECT uid, user_name, phone FROM flashim_user
+    </select>
+
+    <select id="queryByUserName" resultType="com.szr.flashim.user.pojo.User">
+        SELECT uid, user_name, phone FROM flashim_user where user_name like  CONCAT('%', #{userName}, '%')
+    </select>
+
+
+    <insert id="save" parameterType="com.szr.flashim.user.pojo.User" >
+        INSERT INTO flashim_user
+            (uid, user_name, password)
+        VALUES
+            (#{uid}, #{userName}, #{password})
+    </insert>
+</mapper>

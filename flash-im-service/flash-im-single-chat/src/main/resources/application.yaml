@@ -1,0 +1,9 @@
+server:
+  port: 10621
+spring:
+  profiles:
+    active: dev
+  application:
+    name: flash-im-single-chat
+
+

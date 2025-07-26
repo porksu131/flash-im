@@ -1,0 +1,65 @@
+spring:
+  cloud:
+    # Nacos 服务发现与注册配置
+    nacos:
+      discovery:
+        server-addr: nacos-0.nacos-headless.nacos.svc.cluster.local:28848,nacos-1.nacos-headless.nacos.svc.cluster.local:28848 # nacos集群使用','隔开
+        username: 'nacos'
+        password: 'nacos'
+        namespace: ${spring.profiles.active}
+      config:
+        server-addr: nacos-0.nacos-headless.nacos.svc.cluster.local:28848,nacos-1.nacos-headless.nacos.svc.cluster.local:28848 # nacos集群使用','隔开
+        username: 'nacos'
+        password: 'nacos'
+        namespace: ${spring.profiles.active}
+  config:
+    import:
+      - optional:nacos:flash-im-gateway-tcp.yaml
+
+
+  data:
+    # Redis配置
+    redis:
+      host: redis-0.redis-headless.redis.svc.cluster.local
+      port: 6379
+      password: 123456
+
+## netty配置
+flashim:
+  jwt:
+    enabled: true
+  gateway:
+    netty:
+      server: ## 服务端，用于与用户通信
+        bindAddress: 0.0.0.0
+        listenPort: 30420
+        serverBossThreads: 1
+        serverWorkerThreads: 3
+        serverHandlerThreads: 8
+        serverPooledByteBufAllocatorEnable: true
+        serverChannelMaxIdleTimeSeconds: 120
+        serverAsyncSemaphoreValue: 64
+        serverCallbackExecutorThreads: 0
+        serverSocketBacklog: 1024
+        shutdownWaitTimeSeconds: 3
+        useSSL: false
+        tlsServerCertPath: ""
+        tlsServerKeyPath: ""
+        serverHandlerExecutorEnable: true
+      client: ## 客户端，用于与分发系统通信
+        bindAddress: 0.0.0.0
+        bindPort: 30421
+        clientWorkerThreads: 4
+        clientCallbackExecutorThreads: 8
+        useSSL: false
+        connectTimeoutMillis: 3000
+        clientChannelMaxIdleTimeSeconds: 120
+        clientAsyncSemaphoreValue: 65535
+        lockTimeoutMillis: 3000
+        minCloseTimeoutMillis: 100
+        sendTimeoutSeconds: 60
+        serverServiceName: "flash-im-dispatch"
+        reconnectMaxAttempts: 5
+        reconnectInitialDelay: 1000
+        reconnectMaxDelay: 30000
+        reconnectMultiplier: 1.5

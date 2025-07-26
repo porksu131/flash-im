@@ -1,0 +1,49 @@
+spring:
+  cloud:
+    # Nacos 服务发现与注册配置
+    nacos:
+      discovery:
+        server-addr: nacos-0.nacos-headless.nacos.svc.cluster.local:28848,nacos-1.nacos-headless.nacos.svc.cluster.local:28848 # nacos集群使用','隔开
+        username: 'nacos'
+        password: 'nacos'
+        namespace: ${spring.profiles.active}
+      config:
+        server-addr: nacos-0.nacos-headless.nacos.svc.cluster.local:28848,nacos-1.nacos-headless.nacos.svc.cluster.local:28848 # nacos集群使用','隔开
+        username: 'nacos'
+        password: 'nacos'
+        namespace: ${spring.profiles.active}
+  config:
+    import:
+      - optional:nacos:flash-im-offline.yaml
+
+  # mysql连接配置
+  datasource:
+    url: jdbc:mysql://mysql-source-headless.mysql.svc.cluster.local:3306/flash_im?allowMultiQueries=true&characterEncoding=utf8&connectTimeout=3000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: Opsszr2025!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    # Redis配置
+    redis:
+      host: redis-0.redis-headless.redis.svc.cluster.local
+      port: 6379
+      password: 123456
+
+# mybatis配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 开启SQL日志
+
+# rocketMQ配置
+rocketmq:
+  name-server: rocketmq-nameserver-0.rocketmq-nameserver-headless.rocketmq.svc.cluster.local:9876;rocketmq-nameserver-1.rocketmq-nameserver-headless.rocketmq.svc.cluster.local:9876  # NameServer 地址，集群使用';'隔开
+  producer:
+    group: user-producer-group  # 生产者组名称
+    send-message-timeout: 3000
+    retry-times-when-send-failed: 3
+    retry-next-server: true
+  consumer:
+    group: user-consumer-group  # 消费者组名称

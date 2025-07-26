@@ -1,0 +1,8 @@
+server:
+  port: 10921
+
+spring:
+  profiles:
+    active: dev
+  application:
+    name: flash-im-gateway-http

@@ -1,0 +1,22 @@
+package com.szr.flashim.dispatch.netty.handler;
+
+
+import com.szr.flashim.general.model.ImMessage;
+import com.szr.flashim.dispatch.FlashImDispatchNettyServer;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+
+@ChannelHandler.Sharable
+public class NettyServerBizHandler extends SimpleChannelInboundHandler<ImMessage> {
+    private final FlashImDispatchNettyServer nettyServer;
+
+    public NettyServerBizHandler(FlashImDispatchNettyServer nettyServer) {
+        this.nettyServer = nettyServer;
+    }
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, ImMessage msg) {
+        this.nettyServer.getMessageProcessManager().processMessageReceived(ctx, msg);
+    }
+}

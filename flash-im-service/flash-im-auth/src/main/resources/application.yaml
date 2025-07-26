@@ -1,0 +1,11 @@
+server:
+  port: 10821
+spring:
+  profiles:
+    active: dev
+  application:
+    name: flash-im-auth
+
+logging:
+  level:
+    org.springframework.security: debug

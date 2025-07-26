@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.4</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+
+    <groupId>com.szr.flashim</groupId>
+    <artifactId>flash-im-netty</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>flash-im-netty</name>
+
+    <!-- 作为父工程，打包方式为pom，不写代码 -->
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>flash-im-core</module>
+        <module>flash-im-dispatch</module>
+        <module>flash-im-gateway-tcp</module>
+        <module>flash-im-example</module>
+        <module>flash-im-gateway-websocket</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <netty.version>4.1.114.Final</netty.version>
+        <fastjson.version>1.2.83</fastjson.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.szr.flashim</groupId>
+            <artifactId>flash-im-general</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+
+</project>

@@ -3,8 +3,7 @@ package com.szr.flashim.general.enumeration;
 public enum MsgType {
     REQUEST(1, "请求"),
     RESPONSE(2, "响应"),
-    NOTIFY(3, "通知"),
-    HEARTBEAT(4, "心跳");
+    NOTIFY(3, "通知");
 
 
     private final int code;

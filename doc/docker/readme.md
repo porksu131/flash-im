@@ -1,6 +1,6 @@
 1. 脚本上传
 ```text
-  将docker-compose.yaml和startup.sh上传到同一目录
+  将docker-compose.yaml和startup.sh上传到同一目录，startup.sh是支持重复运行的
 ```
 
 2. 赋予执行权限

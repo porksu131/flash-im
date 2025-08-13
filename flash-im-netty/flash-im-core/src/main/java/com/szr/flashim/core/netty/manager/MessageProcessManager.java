@@ -60,9 +60,6 @@ public class MessageProcessManager {
                 LOGGER.debug("收到通知消息：{}", msg.getMsgId());
                 processNotifyCommand(ctx, msg);
                 break;
-            case HEARTBEAT:
-                LOGGER.debug("收到心跳消息：{}", msg.getMsgId());
-                break;
             default:
                 break;
         }
@@ -339,7 +336,7 @@ public class MessageProcessManager {
 
     public void invokeOneway(final Channel channel, final ImMessage request, final long timeoutMillis)
             throws InterruptedException, SendTimeoutException, SendRequestException {
-        if (request.getMsgType() != MsgType.NOTIFY.getCode() && request.getMsgType() != MsgType.HEARTBEAT.getCode()) {
+        if (request.getMsgType() != MsgType.NOTIFY.getCode()) {
             LOGGER.warn("request msgType <{}> not support.", request.getMsgType());
             return;
         }

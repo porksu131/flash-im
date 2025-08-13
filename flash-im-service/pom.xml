@@ -24,6 +24,7 @@
         <module>flash-im-gateway-http</module>
         <module>flash-im-auth</module>
         <module>flash-im-offline</module>
+        <module>flash-im-file</module>
     </modules>
 
     <properties>

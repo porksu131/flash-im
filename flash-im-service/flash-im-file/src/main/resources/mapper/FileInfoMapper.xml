@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szr.flashim.file.mapper.FileInfoMapper">
+    <resultMap id="BaseResultMap" type="com.szr.flashim.file.model.pojo.FileInfo">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="original_name" property="originalName" jdbcType="VARCHAR"/>
+        <result column="storage_name" property="storageName" jdbcType="VARCHAR"/>
+        <result column="size" property="size" jdbcType="BIGINT"/>
+        <result column="md5" property="md5" jdbcType="VARCHAR"/>
+        <result column="content_type" property="contentType" jdbcType="VARCHAR"/>
+        <result column="path" property="path" jdbcType="VARCHAR"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="BIGINT"/>
+        <result column="update_time" property="updateTime" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.szr.flashim.file.model.pojo.FileInfo">
+        INSERT INTO file_info
+        (id, original_name, storage_name, size, md5, content_type, path, user_id, status, create_time, update_time)
+        VALUES
+            (#{id}, #{originalName}, #{storageName}, #{size}, #{md5}, #{contentType}, #{path}, #{userId}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectByMd5" resultMap="BaseResultMap">
+        SELECT * FROM file_info WHERE md5 = #{md5}
+    </select>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT * FROM file_info WHERE id = #{id}
+    </select>
+
+    <update id="updateStatus">
+        UPDATE file_info SET status = #{status}, update_time = #{updateTime} WHERE id = #{id}
+    </update>
+</mapper>

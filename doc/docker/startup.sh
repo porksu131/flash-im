@@ -10,6 +10,7 @@ dirs=(
   mysql/{conf,data,logs}
   nacos/{conf,data,logs}
   redis/{conf,data,logs}
+  minio/{certs,data}
   rocketmq/{namesrv/{conf,logs,store},broker/{conf,logs,store}}
 )
 
@@ -19,7 +20,7 @@ for dir in "${dirs[@]}"; do
   chmod 777 "$full_path"
 done
 
-# 配置初始化（仅首次执行）
+# 配置初始化（仅首次执行）,参数 --rm ：容器退出时自动移除，也就是临时容器
 if [ ! -f "${base_dir}/nacos/conf/application.properties" ]; then
     docker run --rm -d --name nacos_init ${NACOS_IMAGE}
     sleep 10

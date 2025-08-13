@@ -4,6 +4,7 @@ import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.SessionCallback;
 import org.springframework.scheduling.annotation.Scheduled;
+import reactor.util.annotation.NonNullApi;
 
 import java.util.concurrent.TimeUnit;
 
@@ -11,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 public class RedisWorkerIdAssigner {
     private static final String WORKER_ID_KEY = CacheConstant.SNOWFLAKE_WORKER_ID;
     private final RedisTemplate<String, Long> redisTemplate;
-    private Long workerId;
+    private final Long workerId;
 
     public RedisWorkerIdAssigner(RedisTemplate<String, Long> redisTemplate) {
         this.redisTemplate = redisTemplate;
@@ -27,6 +28,7 @@ public class RedisWorkerIdAssigner {
         // 原子性分配新ID
         return redisTemplate.execute(new SessionCallback<>() {
             @Override
+            @SuppressWarnings("unchecked")
             public Long execute(RedisOperations operations) {
                 operations.watch(WORKER_ID_KEY);
 

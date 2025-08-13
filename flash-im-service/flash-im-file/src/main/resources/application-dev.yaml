@@ -1,0 +1,48 @@
+server:
+  tomcat:
+    threads:
+      max: 200 # 同时处理的最大线程数，超过的放在队列中等待
+      min-spare: 10 # 空闲时保持的线程数
+    max-connections: 8192 # 可处理的最大连接数
+    accept-count: 1000 # 传入连接请求的最大队列长度
+spring:
+  cloud:
+    # Nacos 服务发现与注册配置
+    nacos:
+      discovery:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+      config:
+        server-addr: 192.168.100.130:8848
+        namespace: ${spring.profiles.active}
+  config:
+    import:
+      - optional:nacos:flash-im-file.yaml
+
+  servlet:
+    multipart:
+      max-file-size: 10GB  # 控制单个上传文件的最大尺寸
+      max-request-size: 10GB # 控制多文件上传时整个请求的最大尺寸
+      enabled: true
+
+  # mysql连接配置
+  datasource:
+    url: jdbc:mysql://192.168.100.130:3306/flash_im?allowMultiQueries=true&characterEncoding=utf8&connectTimeout=3000&socketTimeout=3000&autoReconnect=true&useSSL=false&allowPublicKeyRetrieval=true
+    username: flash_im
+    password: mysql1234!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  data:
+    # Redis配置
+    redis:
+      host: 192.168.100.130
+      port: 6379
+      password: redis1234!
+
+
+minio:
+  endpoint: http://192.168.100.130:9000
+  access-key: minio
+  secret-key: minio123
+  chat-bucket: flash-im-chat-bucket
+  default-part-size: 5242880 # 5M

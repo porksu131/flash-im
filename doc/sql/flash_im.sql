@@ -46,3 +46,37 @@ CREATE TABLE `flashim_chat_message` (
                                PRIMARY KEY (`message_id`),
                                KEY `idx_unread` (`message_to`,`message_from`,`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='聊天消息表';
+
+
+-- 文件信息表
+CREATE TABLE `file_info` (
+                             `id` bigint NOT NULL COMMENT '文件ID，雪花算法生成',
+                             `original_name` varchar(255) NOT NULL COMMENT '原始文件名',
+                             `storage_name` varchar(255) NOT NULL COMMENT '存储的文件名',
+                             `size` bigint NOT NULL COMMENT '文件大小(字节)',
+                             `md5` varchar(32) NOT NULL COMMENT '文件MD5值',
+                             `content_type` varchar(100) NOT NULL COMMENT '文件类型',
+                             `path` varchar(500) NOT NULL COMMENT '文件存储路径',
+                             `user_id` bigint NOT NULL COMMENT '上传用户ID',
+                             `status` tinyint NOT NULL DEFAULT '0' COMMENT '上传状态(0:上传中,1:上传完成,2:上传失败)',
+                             `create_time` bigint NOT NULL COMMENT '创建时间(时间戳)',
+                             `update_time` bigint NOT NULL COMMENT '更新时间(时间戳)',
+                             PRIMARY KEY (`id`),
+                             KEY `idx_md5` (`md5`),
+                             KEY `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='文件信息表';
+
+-- 文件分片信息表
+CREATE TABLE `file_part_info` (
+                                  `id` bigint NOT NULL COMMENT '分片ID，雪花算法生成',
+                                  `file_id` bigint NOT NULL COMMENT '文件ID',
+                                  `part_number` int NOT NULL COMMENT '分片序号',
+                                  `part_size` bigint NOT NULL COMMENT '分片大小',
+                                  `part_md5` varchar(32) DEFAULT NULL COMMENT '分片MD5',
+                                  `status` tinyint NOT NULL DEFAULT '0' COMMENT '分片上传状态(0:未上传,1:已上传)',
+                                  `create_time` bigint NOT NULL COMMENT '创建时间(时间戳)',
+                                  `update_time` bigint NOT NULL COMMENT '更新时间(时间戳)',
+                                  PRIMARY KEY (`id`),
+                                  KEY `idx_file_id` (`file_id`),
+                                  KEY `idx_file_id_part_number` (`file_id`, `part_number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='文件分片信息表';

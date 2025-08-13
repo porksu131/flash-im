@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.szr.flashim.file.mapper.FilePartInfoMapper">
+    <resultMap id="BaseResultMap" type="com.szr.flashim.file.model.pojo.FilePartInfo">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="file_id" property="fileId" jdbcType="BIGINT"/>
+        <result column="part_number" property="partNumber" jdbcType="INTEGER"/>
+        <result column="part_size" property="partSize" jdbcType="BIGINT"/>
+        <result column="part_md5" property="partMd5" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="BIGINT"/>
+        <result column="update_time" property="updateTime" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.szr.flashim.file.model.pojo.FilePartInfo">
+        INSERT INTO file_part_info
+        (id, file_id, part_number, part_size, part_md5, status, create_time, update_time)
+        VALUES
+            (#{id}, #{fileId}, #{partNumber}, #{partSize}, #{partMd5}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+
+    <select id="selectByFileId" resultMap="BaseResultMap">
+        SELECT * FROM file_part_info WHERE file_id = #{fileId} ORDER BY part_number
+    </select>
+
+    <update id="updateStatus">
+        UPDATE file_part_info SET status = #{status}, update_time = #{updateTime} WHERE id = #{id}
+    </update>
+
+    <delete id="deleteByFileId">
+        DELETE FROM file_part_info WHERE file_id = #{fileId}
+    </delete>
+</mapper>
